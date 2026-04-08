@@ -124,8 +124,7 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
   }
 
   return (
-    <div className="h-full flex flex-col bg-white border-l border-gray-200">
-      {/* Header */}
+    <div className="flex h-full flex-col bg-white lg:border-l lg:border-gray-200">
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center">
           <span className="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
@@ -136,7 +135,6 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
         </p>
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {isLoadingPermissions ? (
           <div className="flex items-center justify-center py-8">
@@ -147,7 +145,7 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
           <div className="space-y-3">
             {permissions.map((permission, index) => (
               <div key={index} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex-1">
                     <div className="font-medium text-gray-900 mb-1">
                       ${(Number(permission.permission?.allowance || permission.allowance || 0) / 1_000_000).toFixed(2)} USDC
@@ -162,7 +160,7 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
                   <button
                     onClick={() => handleRevokePermission(permission)}
                     disabled={isRevoking}
-                    className="ml-3 px-3 py-1 text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded-md border border-red-200 disabled:opacity-50 transition-colors duration-200"
+                    className="w-full rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600 transition-colors duration-200 hover:bg-red-100 disabled:opacity-50 sm:ml-3 sm:w-auto sm:py-1"
                   >
                     {isRevoking ? "Revoking..." : "Revoke"}
                   </button>
@@ -187,7 +185,6 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
         )}
       </div>
 
-      {/* Footer */}
       {permissions.length > 0 && (
         <div className="p-4 border-t border-gray-200 bg-gray-50">
           <div className="text-xs text-gray-500 text-center">

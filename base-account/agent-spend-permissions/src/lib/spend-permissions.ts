@@ -5,7 +5,7 @@ import {
   getPermissionStatus,
   requestRevoke,
 } from '@base-org/account/spend-permission'
-import { createBaseAccountSDK } from '@base-org/account'
+import { ensureBaseAccountConnected, forceBaseChain, getBaseAccountProvider } from '@/lib/base-account'
 
 export interface SpendPermission {
   account: string
@@ -27,6 +27,9 @@ export async function requestUserSpendPermission(
   try {
     // Convert USD to USDC (6 decimals)
     const allowanceUSDC = BigInt(dailyLimitUSD * 1_000_000)
+    const { provider } = await ensureBaseAccountConnected()
+
+    await forceBaseChain(provider)
 
     const permission = await requestSpendPermission({
       account: userAccount as `0x${string}`,
@@ -35,9 +38,7 @@ export async function requestUserSpendPermission(
       chainId: 8453, // Base mainnet
       allowance: allowanceUSDC,
       periodInDays: 1, // Daily limit
-      provider: createBaseAccountSDK({
-        appName: "Job Search Agent",
-      }).getProvider(),
+      provider,
     })
 
     return {
@@ -60,12 +61,9 @@ export async function getUserSpendPermissions(
   spenderAccount: string
 ) {
   try {
-    console.log('🔧 Creating Base Account SDK...')
-    const sdk = createBaseAccountSDK({
-      appName: "Job Search Agent",
-    })
-    const provider = sdk.getProvider()
-    console.log('✅ SDK and provider created')
+    console.log('🔧 Reusing Base Account SDK provider...')
+    const provider = getBaseAccountProvider()
+    console.log('✅ Shared SDK provider ready')
 
     console.log('📡 Calling fetchPermissions with:')
     console.log('  - account:', userAccount)
@@ -150,9 +148,7 @@ export async function revokeSpendPermission(permission: any): Promise<string> {
     // Ensure the permission object has the correct structure for requestRevoke
     const normalizedPermission = {
       permission: permission,
-      provider: createBaseAccountSDK({
-        appName: "Job Search Agent",
-      }).getProvider(),
+      provider: getBaseAccountProvider(),
     }
     
     console.log('🔧 Normalized permission for revoke:', normalizedPermission)

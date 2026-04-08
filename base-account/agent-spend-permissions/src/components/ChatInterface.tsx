@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { isSpendPermissionClientError, prepareOptimisticSpendCallData } from '@/lib/spend-permission-client'
 
 interface JobListing {
   title: string
@@ -141,6 +142,10 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
           topUpSpendCalls = await prepareSpendCallData(permission, USER_PULL_STEP_USDC)
         } catch (error) {
           console.warn('Failed to prepare top-up spend calls on the client:', error)
+
+          if (isSpendPermissionClientError(error)) {
+            topUpSpendCalls = prepareOptimisticSpendCallData(permission, USER_PULL_STEP_USDC)
+          }
         }
       }
 
@@ -199,21 +204,19 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-slate-50 to-slate-100">
-      {/* Header */}
-      <div className="border-b border-slate-200 p-4 bg-white/80 backdrop-blur-sm">
-        <h2 className="text-xl font-semibold text-slate-900">Job Search Agent</h2>
-        <p className="text-sm text-slate-600">Connected: {userAddress?.slice(0, 6)}...{userAddress?.slice(-4)}</p>
+      <div className="border-b border-slate-200 bg-white/80 p-3 backdrop-blur-sm sm:p-4">
+        <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">Job Search Agent</h2>
+        <p className="text-xs text-slate-600 sm:text-sm">Connected: {userAddress?.slice(0, 6)}...{userAddress?.slice(-4)}</p>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 space-y-4 overflow-y-auto p-3 sm:p-4">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm ${
+              className={`max-w-[88%] rounded-2xl px-4 py-3 shadow-sm sm:max-w-xs lg:max-w-md ${
                 message.sender === 'user'
                   ? 'bg-base-blue shadow-blue-100'
                   : 'bg-white border border-slate-200 shadow-slate-100'
@@ -226,7 +229,7 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
                 <div className="mt-3 space-y-3">
                   {(message.details.results as JobListing[]).slice(0, 6).map((job, index) => (
                     <div key={`${job.url}-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold text-slate-900">{job.title}</p>
                           <p className="text-xs text-slate-600">{job.company}{job.publishedDate ? ` • ${job.publishedDate.slice(0, 10)}` : ''}</p>
@@ -235,7 +238,7 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
                           href={job.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="shrink-0 rounded-lg bg-base-blue px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+                          className="w-full rounded-lg bg-base-blue px-3 py-1.5 text-center text-xs font-medium text-white transition-colors hover:bg-blue-700 sm:w-auto sm:shrink-0"
                         >
                           View Listing
                         </a>
@@ -258,9 +261,9 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-slate-200 shadow-slate-100 max-w-xs lg:max-w-md px-4 py-3 rounded-2xl">
-              <div className="flex items-center space-x-2">
-                <div className="animate-pulse flex space-x-1">
+            <div className="max-w-[88%] rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-slate-100 sm:max-w-xs lg:max-w-md">
+              <div className="flex items-center gap-2">
+                <div className="flex animate-pulse gap-1">
                   <div className="w-2 h-2 bg-base-blue rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-base-blue rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                   <div className="w-2 h-2 bg-base-blue rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -273,22 +276,21 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-slate-200 p-4 bg-white/80 backdrop-blur-sm">
-        <div className="flex space-x-3">
+      <div className="border-t border-slate-200 bg-white/80 p-3 backdrop-blur-sm sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Paste your CV or describe your skills, experience, and ideal role..."
             className="flex-1 p-3 border border-slate-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-base-blue focus:border-transparent bg-white shadow-sm transition-all duration-200 text-slate-900 placeholder-slate-500"
-            rows={2}
+            rows={3}
             disabled={isLoading}
           />
           <button
             onClick={sendMessage}
             disabled={!inputValue.trim() || isLoading}
-            className="px-6 py-3 bg-base-blue text-white rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-base-blue focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
+            className="w-full rounded-xl bg-base-blue px-6 py-3 text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-base-blue focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             <span className="font-medium">Send</span>
           </button>
