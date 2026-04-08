@@ -10,6 +10,7 @@ export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userAddress, setUserAddress] = useState<string>()
   const [hasSpendPermission, setHasSpendPermission] = useState(false)
+  const [showSpendPermissions, setShowSpendPermissions] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -126,17 +127,32 @@ export default function Home() {
             <SpendPermissionSetup userAddress={userAddress!} onPermissionGranted={handlePermissionGranted} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
-            <div className="lg:col-span-2">
-              <div className="chat-container h-[70dvh] min-h-[28rem] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg lg:h-[600px]">
-                <ChatInterface isAuthenticated={isAuthenticated} userAddress={userAddress} />
-              </div>
+          <div className="space-y-4">
+            <div className="chat-container h-[70dvh] min-h-[28rem] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg lg:h-[600px]">
+              <ChatInterface isAuthenticated={isAuthenticated} userAddress={userAddress} />
             </div>
 
-            <div className="lg:col-span-1">
-              <div className="min-h-[22rem] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg lg:h-[600px]">
-                <SpendPermissionManager isAuthenticated={isAuthenticated} userAddress={userAddress} />
-              </div>
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <button
+                type="button"
+                onClick={() => setShowSpendPermissions((current) => !current)}
+                aria-expanded={showSpendPermissions}
+                className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-slate-50"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Spend permissions</p>
+                  <p className="text-xs text-slate-600">View or revoke your active funding permission</p>
+                </div>
+                <span className="text-sm font-medium text-base-blue">
+                  {showSpendPermissions ? 'Hide' : 'Show'}
+                </span>
+              </button>
+
+              {showSpendPermissions && (
+                <div className="border-t border-slate-200">
+                  <SpendPermissionManager isAuthenticated={isAuthenticated} userAddress={userAddress} />
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -193,7 +209,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-600">AI Agent (GPT-4o-mini)</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-600">AI Agent (GPT-4o)</h3>
                     <p className="text-gray-600">Analyzes your background and generates 3 to 5 targeted job search queries</p>
                   </div>
                 </a>

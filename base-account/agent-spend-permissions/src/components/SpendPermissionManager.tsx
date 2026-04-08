@@ -22,69 +22,32 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
 
   const loadPermissions = async () => {
     if (!userAddress) {
-      console.log('❌ No userAddress provided to loadPermissions')
+      setIsLoadingPermissions(false)
       return
     }
-    
-    console.log('🔍 Starting to load permissions for user:', userAddress)
+
     setIsLoadingPermissions(true)
     try {
-      // Get server wallet address
-      console.log('📡 Fetching server wallet address...')
       const walletResponse = await fetch("/api/wallet/create", {
         method: "POST",
       });
 
-      console.log('📡 Wallet API response status:', walletResponse.status)
       if (!walletResponse.ok) {
         throw new Error(`Failed to get server wallet: ${walletResponse.status}`)
       }
 
       const walletData = await walletResponse.json();
-      console.log('💰 Server wallet data:', walletData)
-      
       const spenderAddress = walletData.smartAccountAddress;
-      console.log('🏦 Spender address (server wallet):', spenderAddress)
 
       if (!spenderAddress) {
         throw new Error('Server wallet address not found in response')
       }
 
-      // Get user's spend permissions
-      console.log('🔍 Fetching permissions with:')
-      console.log('  - User account:', userAddress)
-      console.log('  - Spender account:', spenderAddress)
-      console.log('  - Chain ID: 8453 (Base mainnet)')
-      
       const userPermissions = await getUserSpendPermissions(userAddress, spenderAddress)
-      
-      console.log('✅ Raw permissions fetched:', userPermissions)
-      console.log('📊 Number of permissions found:', userPermissions.length)
-      
-      if (userPermissions.length > 0) {
-        userPermissions.forEach((permission, index) => {
-          console.log(`📋 Permission ${index + 1}:`, {
-            permissionHash: permission.permissionHash,
-            signature: permission.signature ? `${permission.signature.slice(0, 10)}...` : 'No signature',
-            chainId: permission.chainId,
-            permission: {
-              account: permission.permission?.account,
-              spender: permission.permission?.spender,
-              token: permission.permission?.token,
-              allowance: permission.permission?.allowance?.toString(),
-              period: permission.permission?.period,
-              start: permission.permission?.start,
-              end: permission.permission?.end,
-            }
-          })
-        })
-      } else {
-        console.log('⚠️ No permissions found for this user/spender combination')
-      }
-      
+
       setPermissions(userPermissions)
     } catch (error) {
-      console.error('❌ Error loading permissions:', error)
+      console.error('Failed to load spend permissions:', error)
       setPermissionError(`Failed to load spend permissions: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsLoadingPermissions(false)
@@ -96,14 +59,11 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
     setPermissionError('')
 
     try {
-      const hash = await revokeSpendPermission(permission)
-      console.log('Permission revoked successfully:', hash)
+      await revokeSpendPermission(permission)
       localStorage.removeItem('spendPermission')
-      
-      // Reload permissions
       await loadPermissions()
     } catch (error) {
-      console.error('Revoke error:', error)
+      console.error('Failed to revoke permission:', error)
       setPermissionError(error instanceof Error ? error.message : "Failed to revoke permission")
     } finally {
       setIsRevoking(false)
@@ -124,8 +84,8 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
   }
 
   return (
-    <div className="flex h-full flex-col bg-white lg:border-l lg:border-gray-200">
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
+    <div className="flex flex-col bg-white">
+      <div className="border-b border-gray-200 bg-gray-50 p-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center">
           <span className="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
           Spend Permissions
@@ -135,7 +95,7 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="p-4">
         {isLoadingPermissions ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
@@ -186,7 +146,7 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
       </div>
 
       {permissions.length > 0 && (
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <div className="border-t border-gray-200 bg-gray-50 p-4">
           <div className="text-xs text-gray-500 text-center">
             Revoked permissions stop future search funding immediately
           </div>

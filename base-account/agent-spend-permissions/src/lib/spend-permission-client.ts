@@ -86,20 +86,6 @@ export interface StoredSpendPermission {
   }
 }
 
-interface CreateSpendPermissionParams {
-  account: `0x${string}`
-  spender: `0x${string}`
-  token: `0x${string}`
-  chainId: number
-  allowance: bigint
-  periodInDays: number
-  signature: `0x${string}`
-  start?: Date
-  end?: Date
-  salt?: `0x${string}`
-  extraData?: `0x${string}`
-}
-
 interface SpendPermissionRequest {
   account: `0x${string}`
   spender: `0x${string}`
@@ -160,18 +146,6 @@ export function createSpendPermissionTypedData(request: SpendPermissionRequest) 
       salt: salt ?? getRandomHexString(32),
       extraData: extraData ?? '0x',
     },
-  }
-}
-
-export function createSignedSpendPermission(params: CreateSpendPermissionParams): StoredSpendPermission {
-  const { signature, ...request } = params
-  const typedData = createSpendPermissionTypedData(request)
-
-  return {
-    createdAt: dateToTimestampInSeconds(new Date()),
-    chainId: request.chainId,
-    signature,
-    permission: typedData.message,
   }
 }
 

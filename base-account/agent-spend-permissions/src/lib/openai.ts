@@ -62,7 +62,7 @@ export async function generateChatResponse(
 ) {
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         ...messages,
@@ -85,7 +85,7 @@ export async function streamChatResponse(
 ) {
   try {
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         ...messages,
