@@ -1,12 +1,23 @@
 "use client";
 
 import React, { useState } from "react";
-import { createBaseAccountSDK } from "@base-org/account";
+import { stringToHex } from "viem";
+import { ensureBaseAccountConnected } from "@/lib/base-account";
 
 interface SignInWithBaseProps {
   onSignIn: (address: string) => void;
   colorScheme?: "light" | "dark";
 }
+
+interface WalletConnectResponse {
+  accounts?: { address: string }[];
+  signInWithEthereum?: {
+    message: string;
+    signature: string;
+  };
+}
+
+const MOBILE_USER_AGENT_REGEX = /Android|iPhone|iPad|iPod|Mobile/i;
 
 export const SignInWithBaseButton = ({
   onSignIn,
@@ -18,62 +29,46 @@ export const SignInWithBaseButton = ({
   const handleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Initialize the SDK
-      const provider = createBaseAccountSDK({
-        appName: "Zora Creator Coins Agent",
-      }).getProvider();
+      const { provider, accounts } = await ensureBaseAccountConnected();
 
-      // 1 — Get a fresh nonce from the server
       const nonceResponse = await fetch('/api/auth/verify', { method: 'GET' });
       const { nonce } = await nonceResponse.json();
-      
-      console.log('Using nonce:', nonce);
 
-      const ethRequestAccountsResponse = await provider.request({
-        method: "eth_requestAccounts",
-      })
+      const requestedAddress = accounts[0];
+      if (!requestedAddress) {
+        throw new Error("No account returned from Base Account");
+      }
 
-      console.log('Eth request accounts response:', ethRequestAccountsResponse);
+      const isMobileClient = MOBILE_USER_AGENT_REGEX.test(navigator.userAgent);
+      let address = requestedAddress;
+      let siweResponse: WalletConnectResponse["signInWithEthereum"];
 
-      const switchChainResponse = await provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: '0x2105' }],
-      })
-
-      console.log('Switch chain response:', switchChainResponse);
-
-      // 2 — Connect and get address
-      const connectResponse = await provider.request({
-        method: "wallet_connect",
-        params: [
-          {
-            version: "1",
-            capabilities: {
-              signInWithEthereum: {
-                chainId: '0x2105',
-                nonce,
+      if (!isMobileClient) {
+        try {
+          const connectResponse = await provider.request({
+            method: "wallet_connect",
+            params: [
+              {
+                version: "1",
+                capabilities: {
+                  signInWithEthereum: {
+                    chainId: '0x2105',
+                    nonce,
+                  },
+                },
               },
-            },
-          },
-        ],
-      }) as { 
-        accounts: { address: string }[], 
-        signInWithEthereum?: { 
-          message: string, 
-          signature: string 
-        } 
-      };
+            ],
+          }) as WalletConnectResponse;
 
-      console.log("Connect response:", connectResponse);
-      const { address } = connectResponse.accounts[0];
+          address = connectResponse.accounts?.[0]?.address ?? requestedAddress;
+          siweResponse = connectResponse.signInWithEthereum;
+        } catch (error) {
+          console.warn("wallet_connect unavailable, falling back to manual sign-in", error);
+        }
+      }
 
-      // 3 — Check if we got SIWE data from the response
-      if (connectResponse.signInWithEthereum) {
-        const { message, signature } = connectResponse.signInWithEthereum;
-        console.log('SIWE message:', message);
-        console.log('SIWE signature:', signature);
-
-        // 4 — Verify signature on the server
+      if (siweResponse) {
+        const { message, signature } = siweResponse;
         const verifyResponse = await fetch('/api/auth/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -85,24 +80,16 @@ export const SignInWithBaseButton = ({
         if (!verifyData.ok) {
           throw new Error(verifyData.error || 'Signature verification failed');
         }
-
-        console.log("✅ Signature verified successfully!");
       } else {
-        // Fallback: manual signing if SIWE not available
-        console.log("⚠️ SIWE not available, using manual signing");
-        
-        // Create SIWE message manually
         const domain = window.location.host;
         const uri = window.location.origin;
         const message = `${domain} wants you to sign in with your Ethereum account:\n${address}\n\nAgent Spend Permissions Authentication\n\nURI: ${uri}\nVersion: 1\nChain ID: 8453\nNonce: ${nonce}\nIssued At: ${new Date().toISOString()}`;
-        
-        // Request signature
+
         const signature = await provider.request({
           method: 'personal_sign',
-          params: [message, address]
-        });
+          params: [stringToHex(message), address]
+        }) as string;
 
-        // Verify signature on server
         const verifyResponse = await fetch('/api/auth/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -114,11 +101,8 @@ export const SignInWithBaseButton = ({
         if (!verifyData.ok) {
           throw new Error(verifyData.error || 'Signature verification failed');
         }
-
-        console.log("✅ Manual signature verified successfully!");
       }
 
-      console.log("✅ Authentication complete for address:", address);
       onSignIn(address);
     } catch (err) {
       console.error("Sign in failed:", err);
@@ -133,8 +117,8 @@ export const SignInWithBaseButton = ({
       onClick={handleSignIn}
       disabled={isLoading}
       className={`
-        flex items-center justify-center gap-2 px-8 py-5 rounded-lg cursor-pointer 
-        font-medium text-lg min-w-64 h-14 transition-all duration-200
+        flex h-14 w-full items-center justify-center gap-2 rounded-lg px-6 py-4
+        text-base font-medium transition-all duration-200 sm:min-w-64 sm:px-8 sm:py-5 sm:text-lg
         ${
           isLight
             ? "bg-white text-black border-2 border-gray-200 hover:bg-gray-50"

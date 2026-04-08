@@ -1,7 +1,7 @@
 {
-  "name": "Base Agent Spend Permissions",
-  "short_name": "Base Agent",
-  "description": "AI Agent for buying Zora creator coins with secure spend permissions",
+  "name": "Job Search Agent",
+  "short_name": "Job Search",
+  "description": "AI-powered job search agent using Base Account spend permissions and x402 payments",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0052FF",
@@ -23,7 +23,7 @@
       "type": "image/svg+xml"
     }
   ],
-  "categories": ["finance", "productivity", "utilities"],
+  "categories": ["productivity", "business", "utilities"],
   "lang": "en",
   "dir": "ltr",
   "orientation": "portrait-primary"

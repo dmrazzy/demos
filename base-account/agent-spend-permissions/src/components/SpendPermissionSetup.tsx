@@ -2,7 +2,11 @@
 
 import React, { useState } from "react";
 import { requestSpendPermission } from "@base-org/account/spend-permission";
-import { createBaseAccountSDK } from "@base-org/account";
+import { ensureBaseAccountConnected, forceBaseChain } from "@/lib/base-account";
+import {
+  createSpendPermissionTypedData,
+  isSpendPermissionClientError,
+} from "@/lib/spend-permission-client";
 
 interface SpendPermissionSetupProps {
   userAddress: string;
@@ -13,13 +17,15 @@ export function SpendPermissionSetup({
   userAddress,
   onPermissionGranted,
 }: SpendPermissionSetupProps) {
-  const [dailyLimit, setDailyLimit] = useState(2);
+  const [dailyLimit, setDailyLimit] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSetupPermission = async () => {
     setIsLoading(true);
     setError("");
+
+    const isMobileClient = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
     try {
       // First create server wallet to get the spender address
@@ -47,19 +53,41 @@ export function SpendPermissionSetup({
       // Convert USD to USDC (6 decimals)
       const allowanceUSDC = BigInt(dailyLimit * 1_000_000);
 
-      // Request spend permission from user's wallet (this requires user signature)
+      const { provider } = await ensureBaseAccountConnected();
+      await forceBaseChain(provider);
+
       console.log("Requesting spend permission from user...");
-      const permission = await requestSpendPermission({
-        account: userAddress as `0x${string}`,
-        spender: spenderAddress as `0x${string}`,
-        token: USDC_BASE_ADDRESS as `0x${string}`,
-        chainId: 8453, // Base mainnet
-        allowance: allowanceUSDC,
-        periodInDays: 1, // Daily limit
-        provider: createBaseAccountSDK({
-          appName: "Zora Creator Coins Agent",
-        }).getProvider(),
-      });
+
+      const permission = await (isMobileClient
+        ? (() => {
+            const typedData = createSpendPermissionTypedData({
+              account: userAddress as `0x${string}`,
+              spender: spenderAddress as `0x${string}`,
+              token: USDC_BASE_ADDRESS as `0x${string}`,
+              chainId: 8453,
+              allowance: allowanceUSDC,
+              periodInDays: 1,
+            });
+
+            return provider.request({
+              method: 'eth_signTypedData_v4',
+              params: [userAddress, typedData],
+            }).then((signature) => ({
+              createdAt: Math.floor(Date.now() / 1000),
+              chainId: 8453,
+              signature: signature as `0x${string}`,
+              permission: typedData.message,
+            }));
+          })()
+        : requestSpendPermission({
+            account: userAddress as `0x${string}`,
+            spender: spenderAddress as `0x${string}`,
+            token: USDC_BASE_ADDRESS as `0x${string}`,
+            chainId: 8453, // Base mainnet
+            allowance: allowanceUSDC,
+            periodInDays: 1, // Daily limit
+            provider,
+          }));
 
       console.log("Spend permission granted:", permission);
 
@@ -69,6 +97,13 @@ export function SpendPermissionSetup({
       onPermissionGranted();
     } catch (error) {
       console.error("Permission setup error:", error);
+
+      if (isMobileClient && isSpendPermissionClientError(error)) {
+        console.warn("Mobile spend permission completed but SDK did not return success. Continuing to chat.", error);
+        onPermissionGranted();
+        return;
+      }
+
       setError(error instanceof Error ? error.message : "Unknown error");
     } finally {
       setIsLoading(false);
@@ -78,14 +113,14 @@ export function SpendPermissionSetup({
 
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+    <div className="mx-auto w-full max-w-md rounded-lg bg-white p-5 shadow-md sm:p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">
         Set Up Spend Permissions
       </h3>
 
       <p className="text-gray-600 text-sm mb-6">
-        To use the Zora Coins Agent, you need to grant spend permissions. This
-        allows the agent to purchase coins on your behalf using your USDC.
+        Grant a daily spend permission to fund job searches. The agent uses your
+        USDC to pay for Exa-powered searches over x402 on Base.
       </p>
 
 
@@ -102,7 +137,7 @@ export function SpendPermissionSetup({
               type="range"
               id="dailyLimit"
               min="1"
-              max="2"
+              max="5"
               step="0.1"
               value={dailyLimit}
               onChange={(e) => setDailyLimit(Number(e.target.value))}
@@ -111,7 +146,7 @@ export function SpendPermissionSetup({
             <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>$1.00</span>
               <span className="font-medium text-base-blue">${dailyLimit.toFixed(2)}</span>
-              <span>$2.00</span>
+              <span>$5.00</span>
             </div>
           </div>
         </div>
@@ -125,7 +160,7 @@ export function SpendPermissionSetup({
         <button
           onClick={handleSetupPermission}
           disabled={isLoading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-base-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-base-blue disabled:opacity-50"
+          className="flex min-h-11 w-full justify-center rounded-md border border-transparent bg-base-blue px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-base-blue focus:ring-offset-2 disabled:opacity-50"
         >
           {isLoading
             ? "Setting up..."
@@ -135,9 +170,9 @@ export function SpendPermissionSetup({
 
       <div className="mt-4 text-xs text-gray-500">
         <p>
-          💡 This creates a secure spend permission that allows the agent to
-          spend up to ${dailyLimit.toFixed(2)} per day from your wallet to buy Zora coins.
-          Gas fees are sponsored automatically.
+          This creates a secure spend permission that allows the agent to spend
+          up to ${dailyLimit.toFixed(2)} per day from your wallet to search for
+          job opportunities. Gas fees are sponsored automatically.
         </p>
       </div>
     </div>

@@ -19,7 +19,7 @@ body {
 }
 
 .chat-container {
-  height: calc(100vh - 4rem);
+  height: 100%;
 }
 
 /* Custom scrollbar for chat messages */

@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
       // Handle function calls - return the tool call details to frontend for execution
       const toolCall = choice.message.tool_calls[0]
       
-      if (toolCall.function.name === 'buy_zora_coin') {
+      if (toolCall.function.name === 'search_jobs') {
         return NextResponse.json({
-          message: choice.message.content || 'I\'ll help you buy that Zora coin. Let me process the purchase...',
+          message: choice.message.content || 'I\'ll turn that background into a few targeted job searches now.',
           toolCall: true,
           details: {
             function: {
