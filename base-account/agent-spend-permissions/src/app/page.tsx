@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SignInWithBaseButton } from '@/components/SignInWithBase'
 import { ChatInterface } from '@/components/ChatInterface'
 import { SpendPermissionSetup } from '@/components/SpendPermissionSetup'
@@ -13,14 +13,11 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check if user is already authenticated
     checkAuthStatus()
   }, [])
 
   const checkAuthStatus = async () => {
     try {
-      // This would typically check for a valid session
-      // For now, we'll just set loading to false
       setIsLoading(false)
     } catch (error) {
       console.error('Auth check error:', error)
@@ -29,8 +26,6 @@ export default function Home() {
   }
 
   const handleSignIn = async (address: string) => {
-    // Signature verification is now handled in the SignInWithBase component
-    // If we reach this point, the user has been successfully authenticated
     console.log('User authenticated with address:', address)
     setIsAuthenticated(true)
     setUserAddress(address)
@@ -50,13 +45,12 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Zora Coins Agent</h1>
-              <p className="text-gray-600">Buy any creator coin with your Base Account</p>
+              <h1 className="text-2xl font-bold text-gray-900">Job Search Agent</h1>
+              <p className="text-gray-600">AI-powered job search with on-chain spend permissions</p>
             </div>
             <div className="flex items-center space-x-4">
               <a
@@ -80,258 +74,206 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!isAuthenticated ? (
           <div className="text-center">
             <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Welcome to Zora Coins Agent
-              </h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Welcome to Job Search Agent</h2>
               <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-                Start buying creator coins with your Base Account.
+                Sign in with Base, grant a small daily USDC budget, and let the agent turn your CV into targeted Exa-powered job searches.
               </p>
               <div className="mb-8 flex justify-center">
                 <SignInWithBaseButton onSignIn={handleSignIn} colorScheme="light" />
               </div>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <div className="w-12 h-12 bg-base-blue rounded-lg flex items-center justify-center mb-4 mx-auto">
                   <span className="text-white font-bold">1</span>
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Sign In</h3>
-                <p className="text-sm text-gray-600">Sign in with your Base Account</p>
+                <p className="text-sm text-gray-600">Authenticate with your Base Account</p>
               </div>
-              
+
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <div className="w-12 h-12 bg-base-blue rounded-lg flex items-center justify-center mb-4 mx-auto">
                   <span className="text-white font-bold">2</span>
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Set Permissions</h3>
-                <p className="text-sm text-gray-600">Configure your daily spend permissions ($1-$2)</p>
+                <p className="text-sm text-gray-600">Approve a daily USDC limit between $1 and $5</p>
               </div>
-              
+
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <div className="w-12 h-12 bg-base-blue rounded-lg flex items-center justify-center mb-4 mx-auto">
                   <span className="text-white font-bold">3</span>
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Buy Coins</h3>
-                <p className="text-sm text-gray-600">Chat with the agent to buy Zora creator coins</p>
+                <h3 className="font-semibold text-gray-900 mb-2">Search Jobs</h3>
+                <p className="text-sm text-gray-600">Paste your CV and receive targeted job listings in chat</p>
               </div>
             </div>
           </div>
         ) : !hasSpendPermission ? (
           <div className="text-center">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Almost Ready!
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Almost Ready!</h2>
               <p className="text-gray-600 mb-8">
-                Set up your spending permissions to start using the agent.
+                Set up your spend permission to fund paid Exa job searches.
               </p>
             </div>
-            <SpendPermissionSetup 
-              userAddress={userAddress!} 
-              onPermissionGranted={handlePermissionGranted} 
-            />
+            <SpendPermissionSetup userAddress={userAddress!} onPermissionGranted={handlePermissionGranted} />
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Chat Interface - Left Side (2/3 width) */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-2xl shadow-lg border border-slate-200 chat-container overflow-hidden h-[600px]">
                 <ChatInterface isAuthenticated={isAuthenticated} userAddress={userAddress} />
               </div>
             </div>
-            
-            {/* Spend Permission Manager - Right Side (1/3 width) */}
+
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden h-[600px]">
-                <SpendPermissionManager 
-                  isAuthenticated={isAuthenticated}
-                  userAddress={userAddress}
-                />
+                <SpendPermissionManager isAuthenticated={isAuthenticated} userAddress={userAddress} />
               </div>
             </div>
           </div>
         )}
 
-        {/* How It Works Diagram - Only show on landing page */}
         {!isAuthenticated && (
           <div className="mt-16 bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">How It Works</h2>
-          
-          <div className="max-w-4xl mx-auto">
-            {/* Flow Diagram */}
-            <div className="relative">
-              {/* Step 1: User */}
-              <a 
-                href="https://docs.base.org/base-account/overview/what-is-base-account?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center mb-8 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
-              >
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-blue-600 transition-colors">
-                    👤
-                  </div>
-                </div>
-                <div className="ml-6 flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">Base Account</h3>
-                  <p className="text-gray-600">Signs in with Base Account and grants spend permission to server wallet</p>
-                </div>
-                <div className="hidden md:block">
-                  <svg className="w-8 h-8 text-gray-300 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m0 0l7-7" />
-                  </svg>
-                </div>
-              </a>
+            <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">How It Works</h2>
 
-              {/* Step 2: Frontend */}
-              <a 
-                href="https://docs.base.org/base-account/improve-ux/spend-permissions?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center mb-8 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
-              >
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-purple-600 transition-colors">
-                    💻
+            <div className="max-w-4xl mx-auto">
+              <div className="relative">
+                <a
+                  href="https://docs.base.org/base-account/overview/what-is-base-account?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center mb-8 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-blue-600 transition-colors">
+                      👤
+                    </div>
                   </div>
-                </div>
-                <div className="ml-6 flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-purple-600">Frontend</h3>
-                  <p className="text-gray-600">Prepares spend permission calls and sends to backend</p>
-                </div>
-                <div className="hidden md:block">
-                  <svg className="w-8 h-8 text-gray-300 group-hover:text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m0 0l7-7" />
-                  </svg>
-                </div>
-              </a>
+                  <div className="ml-6 flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">Base Account</h3>
+                    <p className="text-gray-600">Signs in and grants spend permission to the server wallet smart account</p>
+                  </div>
+                </a>
 
-              {/* Step 3: AI Agent */}
-              <a 
-                href="https://chatgpt.com?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center mb-8 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
-              >
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-green-600 transition-colors">
-                    🤖
+                <a
+                  href="https://docs.base.org/base-account/improve-ux/spend-permissions?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center mb-8 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-purple-600 transition-colors">
+                      💻
+                    </div>
                   </div>
-                </div>
-                <div className="ml-6 flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-600">AI Agent (GPT-5-Nano)</h3>
-                  <p className="text-gray-600">Processes natural language requests and decides to buy creator coins</p>
-                </div>
-                <div className="hidden md:block">
-                  <svg className="w-8 h-8 text-gray-300 group-hover:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m0 0l7-7" />
-                  </svg>
-                </div>
-              </a>
+                  <div className="ml-6 flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-purple-600">Frontend</h3>
+                    <p className="text-gray-600">Prepares initial spend calls and sends CV-driven search requests to the backend</p>
+                  </div>
+                </a>
 
-              {/* Step 4: Server Wallet */}
-              <a 
-                href="https://docs.cdp.coinbase.com/server-wallets/v2/introduction/welcome?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center mb-8 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
-              >
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-orange-600 transition-colors">
-                    🏦
+                <a
+                  href="https://chatgpt.com?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center mb-8 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-green-600 transition-colors">
+                      🤖
+                    </div>
                   </div>
-                </div>
-                <div className="ml-6 flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-600">Server Wallet (CDP Smart Account)</h3>
-                  <p className="text-gray-600">Executes spend calls, swaps USDC for creator coins, transfers to user</p>
-                </div>
-                <div className="hidden md:block">
-                  <svg className="w-8 h-8 text-gray-300 group-hover:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m0 0l7-7" />
-                  </svg>
-                </div>
-              </a>
+                  <div className="ml-6 flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-600">AI Agent (GPT-4o-mini)</h3>
+                    <p className="text-gray-600">Analyzes your background and generates 3 to 5 targeted job search queries</p>
+                  </div>
+                </a>
 
-              {/* Step 5: Zora Protocol */}
-              <a 
-                href="https://docs.zora.co/coins/sdk?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center mb-8 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
-              >
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-purple-700 transition-colors">
-                    🎨
+                <a
+                  href="https://docs.cdp.coinbase.com/server-wallets/v2/introduction/welcome?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center mb-8 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-orange-600 transition-colors">
+                      🏦
+                    </div>
                   </div>
-                </div>
-                <div className="ml-6 flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-purple-600">Zora Protocol</h3>
-                  <p className="text-gray-600">Creator coin lookup and trading via Zora's decentralized protocol</p>
-                </div>
-                <div className="hidden md:block">
-                  <svg className="w-8 h-8 text-gray-300 group-hover:text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m0 0l7-7" />
-                  </svg>
-                </div>
-              </a>
+                  <div className="ml-6 flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-600">Server Wallet</h3>
+                    <p className="text-gray-600">Executes the spend permission, moves USDC to its EOA, and signs x402 payments</p>
+                  </div>
+                </a>
 
-              {/* Step 6: Base Chain */}
-              <a 
-                href="https://docs.base.org/base-chain/quickstart/why-base?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
-              >
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-blue-700 transition-colors">
-                    ⛓️
+                <a
+                  href="https://exa.ai/docs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center mb-8 p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-emerald-700 transition-colors">
+                      🔎
+                    </div>
                   </div>
-                </div>
-                <div className="ml-6 flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">Base Chain</h3>
-                  <p className="text-gray-600">Transactions execute on-chain with gas sponsorship</p>
-                </div>
-              </a>
+                  <div className="ml-6 flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-emerald-600">Exa Search (x402)</h3>
+                    <p className="text-gray-600">Runs paid job searches over x402, one request per query, on Base</p>
+                  </div>
+                </a>
+
+                <a
+                  href="https://docs.base.org/base-chain/quickstart/why-base?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center p-4 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-blue-700 transition-colors">
+                      ⛓️
+                    </div>
+                  </div>
+                  <div className="ml-6 flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">Base Chain</h3>
+                    <p className="text-gray-600">The permission execution and funding transactions settle on Base with gas sponsorship</p>
+                  </div>
+                </a>
+              </div>
+
+              <div className="mt-12 grid md:grid-cols-2 gap-6">
+                <a
+                  href="https://docs.base.org/base-account/improve-ux/spend-permissions?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-slate-50 rounded-lg p-6 hover:bg-slate-100 transition-colors duration-200 cursor-pointer group"
+                >
+                  <h4 className="font-semibold text-gray-900 mb-3 group-hover:text-blue-600">🔐 Spend Permissions</h4>
+                  <p className="text-sm text-gray-600">
+                    Users grant limited USDC spending authority to the server wallet smart account. The app can only take the approved amount.
+                  </p>
+                </a>
+
+                <a
+                  href="https://docs.base.org/base-account/improve-ux/sponsor-gas/paymasters?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-slate-50 rounded-lg p-6 hover:bg-slate-100 transition-colors duration-200 cursor-pointer group"
+                >
+                  <h4 className="font-semibold text-gray-900 mb-3 group-hover:text-blue-600">⛽ Gas Sponsorship</h4>
+                  <p className="text-sm text-gray-600">
+                    The smart-account funding step uses CDP paymaster sponsorship, so users do not need ETH for gas.
+                  </p>
+                </a>
+              </div>
             </div>
-
-            {/* Key Components */}
-            <div className="mt-12 grid md:grid-cols-2 gap-6">
-              <a 
-                href="https://docs.base.org/base-account/improve-ux/spend-permissions?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="bg-slate-50 rounded-lg p-6 hover:bg-slate-100 transition-colors duration-200 cursor-pointer group"
-              >
-                <h4 className="font-semibold text-gray-900 mb-3 group-hover:text-blue-600">
-                  🔐 Spend Permissions
-                </h4>
-                <p className="text-sm text-gray-600">
-                  User grants limited spending authority to server wallet's smart account. 
-                  Server can only spend up to the permitted amount.
-                </p>
-              </a>
-              <a 
-                href="https://docs.base.org/base-account/improve-ux/sponsor-gas/paymasters?utm_source=x&utm_medium=video&utm_campaign=spend-permissions-youssef" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="bg-slate-50 rounded-lg p-6 hover:bg-slate-100 transition-colors duration-200 cursor-pointer group"
-              >
-                <h4 className="font-semibold text-gray-900 mb-3 group-hover:text-blue-600">
-                  ⛽ Gas Sponsorship
-                </h4>
-                <p className="text-sm text-gray-600">
-                  All transactions are sponsored using CDP's paymaster. 
-                  Users don't need ETH for gas fees.
-                </p>
-              </a>
-            </div>
-          </div>
           </div>
         )}
       </div>

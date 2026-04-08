@@ -98,6 +98,7 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
     try {
       const hash = await revokeSpendPermission(permission)
       console.log('Permission revoked successfully:', hash)
+      localStorage.removeItem('spendPermission')
       
       // Reload permissions
       await loadPermissions()
@@ -131,7 +132,7 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
           Spend Permissions
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          Manage your active spend permissions
+          Manage your active job search funding permissions
         </p>
       </div>
 
@@ -175,7 +176,7 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
               <span className="text-2xl">📝</span>
             </div>
             <p className="text-sm text-gray-600 mb-2">No active spend permissions</p>
-            <p className="text-xs text-gray-500">Set up permissions in the previous step to start using the agent</p>
+            <p className="text-xs text-gray-500">Set up a permission to fund paid Exa searches from the chat</p>
           </div>
         )}
         
@@ -190,7 +191,7 @@ export function SpendPermissionManager({ isAuthenticated, userAddress }: SpendPe
       {permissions.length > 0 && (
         <div className="p-4 border-t border-gray-200 bg-gray-50">
           <div className="text-xs text-gray-500 text-center">
-            💡 Revoked permissions will be removed immediately
+            Revoked permissions stop future search funding immediately
           </div>
         </div>
       )}

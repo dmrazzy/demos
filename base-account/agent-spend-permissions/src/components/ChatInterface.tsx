@@ -2,6 +2,15 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 
+interface JobListing {
+  title: string
+  url: string
+  company: string
+  summary: string
+  publishedDate?: string
+  matchedQueries?: string[]
+}
+
 interface Message {
   id: string
   content: string
@@ -16,11 +25,13 @@ interface ChatInterfaceProps {
   userAddress?: string
 }
 
+const USER_PULL_STEP_USDC = BigInt(100_000)
+
 export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm your Zora coin buying agent. I can help you purchase creator coins using your spend permissions. Just tell me which Zora user's coins you'd like to buy and how much you want to spend!",
+      content: "I'm your job search assistant. Paste your CV or describe your skills, experience, and preferences, and I'll find relevant roles for you.",
       sender: 'agent',
       timestamp: new Date(),
     },
@@ -75,9 +86,8 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
         throw new Error(data.error)
       }
 
-      // If this is a tool call (buy_zora_coin), we need to handle spend permissions on the frontend
-      if (data.toolCall && data.details?.function?.name === 'buy_zora_coin') {
-        await handleZoraCoinPurchase(data.details.function.arguments)
+      if (data.toolCall && data.details?.function?.name === 'search_jobs') {
+        await handleJobSearch(data.details.function.arguments)
         return
       }
 
@@ -105,74 +115,66 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
     }
   }
 
-  const handleZoraCoinPurchase = async (args: any) => {
+  const handleJobSearch = async (args: any) => {
     try {
-      // Parse the function arguments
-      const { zoraHandle, amountUSD } = typeof args === 'string' ? JSON.parse(args) : args
+      const { queries } = typeof args === 'string' ? JSON.parse(args) : args
 
-      // Get stored spend permission
+      if (!Array.isArray(queries) || queries.length === 0) {
+        throw new Error('No search queries were generated')
+      }
+
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        content: `Searching for jobs with ${queries.length} targeted ${queries.length === 1 ? 'query' : 'queries'}...`,
+        sender: 'agent',
+        timestamp: new Date(),
+      }])
+
       const storedPermission = localStorage.getItem('spendPermission')
-      console.log('Stored permission:', storedPermission)
-      if (!storedPermission) {
-        throw new Error('No spend permission found. Please set up spend permissions first.')
+      let topUpSpendCalls: unknown[] | undefined
+
+      if (storedPermission) {
+        const permission = JSON.parse(storedPermission)
+        const { prepareSpendCallData } = await import('@base-org/account/spend-permission')
+
+        try {
+          topUpSpendCalls = await prepareSpendCallData(permission, USER_PULL_STEP_USDC)
+        } catch (error) {
+          console.warn('Failed to prepare top-up spend calls on the client:', error)
+        }
       }
 
-      const permission = JSON.parse(storedPermission)
-
-      // Import spend permission utilities dynamically (client-side only)
-      const { getPermissionStatus, prepareSpendCallData } = await import('@base-org/account/spend-permission')
-
-      // Check permission status
-      const status = await getPermissionStatus(permission)
-      const requiredAmountUSDC = BigInt(Math.floor(amountUSD * 1_000_000))
-
-      if (status.remainingSpend < requiredAmountUSDC) {
-        throw new Error(`Insufficient spend permission. Remaining: $${Number(status.remainingSpend) / 1_000_000}`)
-      }
-
-      // Prepare spend calls on the frontend
-      const spendCalls = await prepareSpendCallData(permission, requiredAmountUSDC)
-
-      // Call the backend API to execute the purchase with prepared calls
-      const buyResponse = await fetch('/api/zora/buy', {
+      const searchResponse = await fetch('/api/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          zoraHandle, 
-          amountUSD,
-          spendCalls
-        }),
+        body: JSON.stringify({ queries, topUpSpendCalls }),
       })
 
-      const buyResult = await buyResponse.json()
+      const searchResult = await searchResponse.json()
+
+      if (!searchResponse.ok) {
+        throw new Error(searchResult.error || 'Job search failed')
+      }
 
       const resultMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: buyResult.success 
-          ? buyResult.message 
-          : `Failed to purchase: ${buyResult.error}`,
+        content: searchResult.success
+          ? searchResult.formattedResults
+          : `Search failed: ${searchResult.error}`,
         sender: 'agent',
         timestamp: new Date(),
         toolCall: true,
-        details: buyResult,
+        details: searchResult,
       }
 
       setMessages(prev => [...prev, resultMessage])
-
-      // Auto-redirect to Base Account activity page after successful purchase
-      if (buyResult.success && buyResult.redirect) {
-        setTimeout(() => {
-          window.open(buyResult.redirect.url, '_blank')
-        }, 2000)
-      }
-
     } catch (error) {
-      console.error('Zora coin purchase error:', error)
+      console.error('Job search error:', error)
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Failed to purchase Zora coin: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        content: `Failed to search jobs: ${error instanceof Error ? error.message : 'Unknown error'}`,
         sender: 'agent',
         timestamp: new Date(),
       }
@@ -199,7 +201,7 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
     <div className="flex flex-col h-full bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Header */}
       <div className="border-b border-slate-200 p-4 bg-white/80 backdrop-blur-sm">
-        <h2 className="text-xl font-semibold text-slate-900">Zora Coin Agent</h2>
+        <h2 className="text-xl font-semibold text-slate-900">Job Search Agent</h2>
         <p className="text-sm text-slate-600">Connected: {userAddress?.slice(0, 6)}...{userAddress?.slice(-4)}</p>
       </div>
 
@@ -220,18 +222,30 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
               <p className={`text-sm whitespace-pre-wrap leading-relaxed ${
                 message.sender === 'user' ? 'text-white' : 'text-slate-900'
               }`}>{message.content}</p>
-              {message.toolCall && message.details && message.details.success && (
-                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
-                  <p className="font-medium text-green-800 mb-2">🎉 Creator coin purchase completed!</p>
-                  <a 
-                    href="https://account.base.app/activity" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 bg-base-blue text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
-                  >
-                    View Activity →
-                  </a>
-                  <p className="text-green-700 text-xs mt-2">Check your transaction activity to see the creator coin in your wallet</p>
+              {message.toolCall && message.details?.success && Array.isArray(message.details.results) && message.details.results.length > 0 && (
+                <div className="mt-3 space-y-3">
+                  {(message.details.results as JobListing[]).slice(0, 6).map((job, index) => (
+                    <div key={`${job.url}-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">{job.title}</p>
+                          <p className="text-xs text-slate-600">{job.company}{job.publishedDate ? ` • ${job.publishedDate.slice(0, 10)}` : ''}</p>
+                        </div>
+                        <a
+                          href={job.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 rounded-lg bg-base-blue px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+                        >
+                          View Listing
+                        </a>
+                      </div>
+                      <p className="mt-2 text-xs leading-relaxed text-slate-700">{job.summary}</p>
+                      {job.matchedQueries?.length ? (
+                        <p className="mt-2 text-[11px] text-slate-500">Matched via: {job.matchedQueries.slice(0, 2).join(' | ')}</p>
+                      ) : null}
+                    </div>
+                  ))}
                 </div>
               )}
               <p className={`text-xs mt-2 ${
@@ -251,7 +265,7 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
                   <div className="w-2 h-2 bg-base-blue rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                   <div className="w-2 h-2 bg-base-blue rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
-                <span className="text-sm text-slate-900">Agent is thinking...</span>
+                <span className="text-sm text-slate-900">Searching for jobs...</span>
               </div>
             </div>
           </div>
@@ -266,7 +280,7 @@ export function ChatInterface({ isAuthenticated, userAddress }: ChatInterfacePro
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me to buy a Zora coin... e.g., 'Buy $10 worth of @username's coin'"
+            placeholder="Paste your CV or describe your skills, experience, and ideal role..."
             className="flex-1 p-3 border border-slate-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-base-blue focus:border-transparent bg-white shadow-sm transition-all duration-200 text-slate-900 placeholder-slate-500"
             rows={2}
             disabled={isLoading}

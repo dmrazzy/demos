@@ -13,7 +13,7 @@ export function SpendPermissionSetup({
   userAddress,
   onPermissionGranted,
 }: SpendPermissionSetupProps) {
-  const [dailyLimit, setDailyLimit] = useState(2);
+  const [dailyLimit, setDailyLimit] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -57,7 +57,7 @@ export function SpendPermissionSetup({
         allowance: allowanceUSDC,
         periodInDays: 1, // Daily limit
         provider: createBaseAccountSDK({
-          appName: "Zora Creator Coins Agent",
+          appName: "Job Search Agent",
         }).getProvider(),
       });
 
@@ -84,8 +84,8 @@ export function SpendPermissionSetup({
       </h3>
 
       <p className="text-gray-600 text-sm mb-6">
-        To use the Zora Coins Agent, you need to grant spend permissions. This
-        allows the agent to purchase coins on your behalf using your USDC.
+        Grant a daily spend permission to fund job searches. The agent uses your
+        USDC to pay for Exa-powered searches over x402 on Base.
       </p>
 
 
@@ -102,7 +102,7 @@ export function SpendPermissionSetup({
               type="range"
               id="dailyLimit"
               min="1"
-              max="2"
+              max="5"
               step="0.1"
               value={dailyLimit}
               onChange={(e) => setDailyLimit(Number(e.target.value))}
@@ -111,7 +111,7 @@ export function SpendPermissionSetup({
             <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>$1.00</span>
               <span className="font-medium text-base-blue">${dailyLimit.toFixed(2)}</span>
-              <span>$2.00</span>
+              <span>$5.00</span>
             </div>
           </div>
         </div>
@@ -135,9 +135,9 @@ export function SpendPermissionSetup({
 
       <div className="mt-4 text-xs text-gray-500">
         <p>
-          💡 This creates a secure spend permission that allows the agent to
-          spend up to ${dailyLimit.toFixed(2)} per day from your wallet to buy Zora coins.
-          Gas fees are sponsored automatically.
+          This creates a secure spend permission that allows the agent to spend
+          up to ${dailyLimit.toFixed(2)} per day from your wallet to search for
+          job opportunities. Gas fees are sponsored automatically.
         </p>
       </div>
     </div>

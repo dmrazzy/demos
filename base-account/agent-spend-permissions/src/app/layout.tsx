@@ -6,43 +6,37 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://base-agent-spend-permissions.vercel.app'),
-  title: 'Zora Creator Coins Agent',
-  description: 'AI Agent for buying Zora creator coins with secure spend permissions on Base',
-  keywords: ['Base', 'AI Agent', 'Zora', 'Creator Coins', 'Spend Permissions', 'Crypto', 'DeFi', 'Web3'],
+  title: 'Job Search Agent',
+  description: 'AI-powered job search agent using Base Account spend permissions and Exa search over x402 on Base',
+  keywords: ['Base', 'AI Agent', 'Job Search', 'Spend Permissions', 'Exa', 'x402', 'OpenAI', 'Web3'],
   authors: [{ name: 'Base Agent Team' }],
   creator: 'Base Agent Team',
   publisher: 'Base Agent Team',
-  
-  // Open Graph
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: process.env.NEXT_PUBLIC_SITE_URL || 'https://base-agent-spend-permissions.vercel.app',
-    title: 'Base Agent Spend Permissions',
-    description: 'AI Agent for buying Zora creator coins with secure spend permissions on Base',
-    siteName: 'Base Agent Spend Permissions',
+    title: 'Job Search Agent',
+    description: 'Find jobs with AI-powered search funded by Base Account spend permissions and x402 payments.',
+    siteName: 'Job Search Agent',
     images: [
       {
         url: '/og-image.svg',
         width: 1200,
         height: 630,
-        alt: 'Base Agent Spend Permissions',
+        alt: 'Job Search Agent',
         type: 'image/svg+xml',
       },
     ],
   },
-  
-  // Twitter
   twitter: {
     card: 'summary_large_image',
-    title: 'Base Agent Spend Permissions',
-    description: 'AI Agent for buying Zora creator coins with secure spend permissions on Base',
+    title: 'Job Search Agent',
+    description: 'Find jobs with AI-powered search funded by Base Account spend permissions and x402 payments.',
     images: ['/og-image.svg'],
     creator: '@base',
     site: '@base',
   },
-  
-  // Icons
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
@@ -53,13 +47,9 @@ export const metadata: Metadata = {
       { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
     ],
   },
-  
-  // Web App Manifest
   manifest: '/manifest.json',
-  
-  // Additional meta tags
-  category: 'finance',
-  classification: 'AI Agent for DeFi',
+  category: 'productivity',
+  classification: 'AI Job Search Assistant',
   robots: {
     index: true,
     follow: true,
@@ -71,13 +61,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  
-  // Verification (add these if you have them)
-  // verification: {
-  //   google: 'your-google-site-verification',
-  //   yandex: 'your-yandex-verification',
-  //   yahoo: 'your-yahoo-verification',
-  // },
 }
 
 export default function RootLayout({

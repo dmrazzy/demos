@@ -18,46 +18,51 @@ export interface ToolCall {
   }
 }
 
-export const SYSTEM_PROMPT = `You are a helpful AI assistant that can buy Zora creator coins for users. 
+export const SYSTEM_PROMPT = `You are a job search assistant. Users will share their CV, resume, or describe their skills and experience, and you will help them find relevant job opportunities.
 
-When a user asks you to buy a Zora coin, you should:
-1. Extract the Zora user handle or profile information from their request
-2. Use the buy_zora_coin function to execute the purchase
-3. Confirm the purchase details with the user
+When a user shares their CV or describes their background:
+1. Analyze their skills, experience, titles, and industry context
+2. Use the search_jobs function to find relevant opportunities
+3. Generate 3 to 5 diverse, targeted search queries
 
-You have access to the user's spend permission which allows you to spend up to their daily limit in USDC to buy creator coins.
+Make queries specific and varied:
+- Include job title variations when helpful
+- Target industries or company types mentioned by the user
+- Include location preferences if they are mentioned
+- Mix broader and narrower searches so the results set is useful
 
-Be friendly, helpful, and always confirm purchase details before executing transactions.`
+If the user has not shared enough information to search well, ask a focused follow-up question instead of calling the tool.
 
-export const ZORA_BUY_FUNCTION = {
+Be professional, concise, and focused on helping users find strong job matches.`
+
+export const JOB_SEARCH_FUNCTION = {
   type: 'function' as const,
   function: {
-    name: 'buy_zora_coin',
-    description: 'Buy a Zora creator coin for a specific user handle and amount',
+    name: 'search_jobs',
+    description: 'Search for job opportunities based on the user profile, CV, and preferences',
     parameters: {
       type: 'object',
       properties: {
-        zoraHandle: {
-          type: 'string',
-          description: 'The Zora user handle or identifier to buy coins for',
-        },
-        amountUSD: {
-          type: 'number',
-          description: 'The amount in USD to spend on the creator coin',
+        queries: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+          description: 'An array of 3 to 5 targeted search queries for job listings that cover different angles of the user profile',
         },
       },
-      required: ['zoraHandle', 'amountUSD'],
+      required: ['queries'],
     },
   },
 }
 
 export async function generateChatResponse(
   messages: ChatMessage[],
-  tools: any[] = [ZORA_BUY_FUNCTION]
+  tools: any[] = [JOB_SEARCH_FUNCTION]
 ) {
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-5-nano',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         ...messages,
@@ -76,11 +81,11 @@ export async function generateChatResponse(
 
 export async function streamChatResponse(
   messages: ChatMessage[],
-  tools: any[] = [ZORA_BUY_FUNCTION]
+  tools: any[] = [JOB_SEARCH_FUNCTION]
 ) {
   try {
     const stream = await openai.chat.completions.create({
-      model: 'gpt-5-nano',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         ...messages,

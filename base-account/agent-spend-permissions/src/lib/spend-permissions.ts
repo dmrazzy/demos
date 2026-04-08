@@ -36,7 +36,7 @@ export async function requestUserSpendPermission(
       allowance: allowanceUSDC,
       periodInDays: 1, // Daily limit
       provider: createBaseAccountSDK({
-        appName: "Zora Creator Coins Agent",
+        appName: "Job Search Agent",
       }).getProvider(),
     })
 
@@ -62,7 +62,7 @@ export async function getUserSpendPermissions(
   try {
     console.log('🔧 Creating Base Account SDK...')
     const sdk = createBaseAccountSDK({
-      appName: "Zora Creator Coins Agent",
+      appName: "Job Search Agent",
     })
     const provider = sdk.getProvider()
     console.log('✅ SDK and provider created')
@@ -151,7 +151,7 @@ export async function revokeSpendPermission(permission: any): Promise<string> {
     const normalizedPermission = {
       permission: permission,
       provider: createBaseAccountSDK({
-        appName: "Zora Creator Coins Agent",
+        appName: "Job Search Agent",
       }).getProvider(),
     }
     
