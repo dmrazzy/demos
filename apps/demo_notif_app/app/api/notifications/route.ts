@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://demo-notif-app.vercel.app'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || ''
 
     const response = await fetch('https://dashboard.base.org/api/v1/notifications/send', {
       method: 'POST',
