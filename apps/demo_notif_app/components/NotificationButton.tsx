@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useConnection } from 'wagmi'
+import { useAccount } from 'wagmi'
 
 type NotificationResult = 'idle' | 'loading' | 'success' | 'not-pinned' | 'error'
 
 export function NotificationButton() {
-  const { address, status } = useConnection()
+  const { address, status } = useAccount()
   const [result, setResult] = useState<NotificationResult>('idle')
 
   async function sendNotification() {
